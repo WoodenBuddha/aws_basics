@@ -1,14 +1,30 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
+	"Parameters" : {
+	  "DefaultVpcCidrBlock" : {
+		"Type" : "String",
+		"Default" : "11.0.0.0/16",
+		"Description" : "Default is 11.0.0.0/16."
+	  },
+	  "DefaultAZ" : {
+		"Type" : "String",
+		"Default" : "eu-west-1a"
+	  },
+	 
+    "VPCSecurityGroups": {
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "The list of security groups to associate with this instance"
+    }
+	},
     "Resources": {
         "VPC": {
             "Type": "AWS::EC2::VPC",
             "Properties": {
-                "CidrBlock": "11.0.0.0/16",
+                "CidrBlock": { "Ref" : "DefaultVpcCidrBlock" }, 
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-vpc"
+                        "Value":{ "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-vpc" ] ] }
                     }
                 ]
             }
@@ -41,12 +57,11 @@
                 "VpcId": {
                     "Ref": "VPC"
                 },
-                "AvailabilityZone": "eu-west-1a",
                 "CidrBlock": "11.0.11.0/24",
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-subnet-public-a"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-subnet-public-a" ] ] }
                     }
                 ]
             }
@@ -57,12 +72,12 @@
                 "VpcId": {
                     "Ref": "VPC"
                 },
-                "AvailabilityZone": "eu-west-1b",
+				"AvailabilityZone" : {"Ref":"DefaultAZ"},
                 "CidrBlock": "11.0.21.0/24",
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-subnet-public-b"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-subnet-public-b" ] ] }
                     }
                 ]
             }
@@ -73,12 +88,12 @@
                 "VpcId": {
                     "Ref": "VPC"
                 },
-                "AvailabilityZone": "eu-west-1a",
+                "AvailabilityZone" : {"Ref":"DefaultAZ"},
                 "CidrBlock": "11.0.12.0/24",
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-subnet-private-a"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-subnet-private-a" ] ] }
                     }
                 ]
             }
@@ -89,12 +104,12 @@
                 "VpcId": {
                     "Ref": "VPC"
                 },
-                "AvailabilityZone": "eu-west-1b",
+				"AvailabilityZone" : "eu-west-1b",
                 "CidrBlock": "11.0.2.0/24",
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-subnet-private-b"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-subnet-private-b" ] ] }
                     }
                 ]
             }
@@ -108,11 +123,39 @@
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-rt-public"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-routetable-public" ] ] }
                     }
                 ]
             }
         },
+		"PRIVATESUBNET1APRIVATERT": {
+		  "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+		  "Properties" : {
+			  "RouteTableId" : { "Ref" : "PRIVATERTA" },
+			  "SubnetId" : { "Ref" : "SUBNETPRIVATEA" }
+			}
+		},
+		"PRIVATESUBNET1BPRIVATERT": {
+		  "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+		  "Properties" : {
+			  "RouteTableId" : { "Ref" : "PRIVATERTA" },
+			  "SubnetId" : { "Ref" : "SUBNETPRIVATEB" }
+			}
+		},
+		"SUBNETPUBLICB2ARTPUBLIC": {
+		  "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+		  "Properties" : {
+			  "RouteTableId" : { "Ref" : "RTPUBLIC" },
+			  "SubnetId" : { "Ref" : "SUBNETPUBLICA" }
+			}
+		},
+		"SUBNETPUBLICB2BRTPUBLIC": {
+		  "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+		  "Properties" : {
+			  "RouteTableId" : { "Ref" : "RTPUBLIC" },
+			  "SubnetId" : { "Ref" : "SUBNETPUBLICB" }
+			}
+		},
         "IGWROUTE": {
             "Type": "AWS::EC2::Route",
             "Properties": {
@@ -134,7 +177,7 @@
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-rt-private-a"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-routetable-private-a" ] ] }
                     }
                 ]
             }
@@ -180,7 +223,7 @@
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "cf-rt-private-b"
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-routetable-private-b" ] ] }
                     }
                 ]
             }
@@ -217,15 +260,130 @@
                 }
             }
         },
+		"EIPEC2": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc",
+				"InstanceId": {"Ref":"EC2INSTANCE2A"}
+            }
+        },
         "EC2INSTANCE1A": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
                 "KeyName": "ec2-linux",
                 "ImageId": "ami-0ac3f325873889036",
+				"IamInstanceProfile" : {
+				  "Ref" : "S3BucketsInstanceProfile"
+				},
                 "InstanceType": "t2.micro",
                 "SubnetId": {
                     "Ref": "SUBNETPRIVATEA"
-                }
-        }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-ec2-1a" ] ] }
+                    }
+                ]
+			}
+        },
+		"EC2INSTANCE1B": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "KeyName": "ec2-linux",
+                "ImageId": "ami-0ac3f325873889036",
+				"IamInstanceProfile" : {
+				  "Ref" : "S3BucketsInstanceProfile"
+				},
+                "InstanceType": "t2.micro",
+                "SubnetId": {
+                    "Ref": "SUBNETPRIVATEB"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-ec2-1b" ] ] }
+                    }
+                ]
+			}
+        },
+		"EC2INSTANCE2A": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+				"AvailabilityZone" : {"Ref":"DefaultAZ"},
+                "KeyName": "ec2-linux",
+                "ImageId": "ami-0ac3f325873889036",
+				"IamInstanceProfile" : {
+				  "Ref" : "S3BucketsInstanceProfile"
+				},
+                "InstanceType": "t2.micro",
+                "SubnetId": {
+                    "Ref": "SUBNETPUBLICA"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-ec2-2a" ] ] }
+                    }
+                ]
+			}
+        },
+		"EC2INSTANCE2B": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "KeyName": "ec2-linux",
+                "ImageId": "ami-0ac3f325873889036",
+				"IamInstanceProfile" : {
+				  "Ref" : "S3BucketsInstanceProfile"
+				},
+                "InstanceType": "t2.micro",
+                "SubnetId": {
+                    "Ref": "SUBNETPUBLICB"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": { "Fn::Join" : [ "", [ {"Ref" : "AWS::StackName"}, "-ec2-2b" ] ] }
+                    }
+                ]
+			}
+        },
+		"S3BucketsInstanceProfile" : {
+		  "Type" : "AWS::IAM::InstanceProfile",
+		  "Properties" : {
+			"Path" : "/",
+			"Roles" : ["ec2-s3-readwrite-role"]
+		  }
+		},
+		
+		"DB" : {
+			 "Type" : "AWS::RDS::DBInstance",
+			"Properties": 
+			{
+				"DBInstanceIdentifier": "pgdb",
+				"DBInstanceClass": "db.t2.micro",
+				"Engine": "postgres",
+				"MasterUsername": "postgres",
+				"MasterUserPassword" : "p0stgr3s",
+				"AllocatedStorage": 20,
+				"DBSubnetGroupName" : { "Ref" : "DBSubnetGroup" },
+				"DBSecurityGroups": [],
+				"AvailabilityZone" : {"Ref":"DefaultAZ"}
+			}
+		},
+		
+		
+		"DBSubnetGroup": {
+		  "Type" : "AWS::RDS::DBSubnetGroup",
+		  "Properties" : {
+			  "DBSubnetGroupDescription": "description",
+			  "SubnetIds" : [
+			  {"Ref": "SUBNETPUBLICB"}, {"Ref": "SUBNETPRIVATEB"}
+			  ]
+			}
+		}
+		
+    
+	
     }
 }
