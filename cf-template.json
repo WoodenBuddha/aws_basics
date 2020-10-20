@@ -57,6 +57,7 @@
                 "VpcId": {
                     "Ref": "VPC"
                 },
+				"AvailabilityZone" : {"Ref":"DefaultAZ"},
                 "CidrBlock": "11.0.11.0/24",
                 "Tags": [
                     {
@@ -72,7 +73,7 @@
                 "VpcId": {
                     "Ref": "VPC"
                 },
-				"AvailabilityZone" : {"Ref":"DefaultAZ"},
+				"AvailabilityZone" : "eu-west-1b",
                 "CidrBlock": "11.0.21.0/24",
                 "Tags": [
                     {
@@ -378,7 +379,7 @@
 		  "Properties" : {
 			  "DBSubnetGroupDescription": "description",
 			  "SubnetIds" : [
-			  {"Ref": "SUBNETPUBLICB"}, {"Ref": "SUBNETPRIVATEB"}
+			  {"Ref": "SUBNETPUBLICA"}, {"Ref": "SUBNETPRIVATEB"}
 			  ]
 			}
 		}
