@@ -16,7 +16,8 @@ pip install psycopg2-binary
 pip install boto3
 pip freeze > /var/www/ws/requirements.txt
 
-export DATABASE_URL=
+export DATABASE_URL=postgresql://postgres:p0stgr3s@pgdb.cbazdk8j8ucl.eu-west-1.rds.amazonaws.com:5432/postgres
+export ENV=prod
 
 # after venv initiated
 python3 /var/www/ws/manage.py db init
