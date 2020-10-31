@@ -1,0 +1,52 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters" : {
+    "LambdaSourceBucket" : {
+		"Type" : "String",
+		"Default" : "aws-basics-source-holder",
+		"Description" : "Source code location for AWS Lambda"
+	},
+	"LambdaSourceKeyFirstFunc" : {
+		"Type" : "String",
+		"Default" : "GetBucketsFunc.zip",
+		"Description" : "Source code file for the first task"
+	},
+	"LambdaSourceKeySecondFunc" : {
+		"Type" : "String",
+		"Default" : "GetBucketsFunc_second.zip",
+		"Description" : "Source code file for the first task"
+	},
+	"LambdaRoleArn" : {
+		"Type" : "String",
+		"Default" : "arn:aws:iam::713832208941:role/lambdaS3ReadOnly"
+	}
+  },
+  "Resources" : {
+    "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+		"FunctionName": "functionOne",
+        "Handler": "GetBucketsFunc.lambda_function.lambda_handler",
+        "Role": { "Ref" : "LambdaRoleArn" },
+        "Code": {
+			"S3Bucket": {"Ref" : "LambdaSourceBucket" },
+            "S3Key": {"Ref" : "LambdaSourceKeyFirstFunc" }
+        },
+        "Runtime": "python3.7"
+      }
+    },
+	"CreateBucketFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+		"FunctionName": "createS3BucketLambda",
+        "Handler": "GetBucketsFunc_second.lambda_function.lambda_handler",
+        "Role": { "Ref" : "LambdaRoleArn" },
+        "Code": {
+			"S3Bucket": {"Ref" : "LambdaSourceBucket" },
+            "S3Key": {"Ref" : "LambdaSourceKeySecondFunc" }
+        },
+        "Runtime": "python3.7"
+      }
+    }
+  }
+}

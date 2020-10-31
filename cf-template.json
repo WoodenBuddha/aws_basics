@@ -14,7 +14,13 @@
     "VPCSecurityGroups": {
       "Type": "List<AWS::EC2::SecurityGroup::Id>",
       "Description": "The list of security groups to associate with this instance"
-    }
+    },
+	  "DBMasterUsername" : {
+		"Type" : "String"
+	},
+	  "DBMasterPassword" : {
+		"Type" : "String"
+	}
 	},
     "Resources": {
         "VPC": {
@@ -364,8 +370,8 @@
 				"DBInstanceIdentifier": "pgdb",
 				"DBInstanceClass": "db.t2.micro",
 				"Engine": "postgres",
-				"MasterUsername": "postgres",
-				"MasterUserPassword" : "p0stgr3s",
+				"MasterUsername": {"Ref":"DBMasterUsername"},
+				"MasterUserPassword" : {"Ref":"DBMasterUserPassword"},
 				"AllocatedStorage": 20,
 				"DBSubnetGroupName" : { "Ref" : "DBSubnetGroup" },
 				"DBSecurityGroups": [],
