@@ -16,36 +16,44 @@
 		"Default" : "GetBucketsFunc_second.zip",
 		"Description" : "Source code file for the first task"
 	},
-	"LambdaRoleArn" : {
+	"LambdaAdminRoleArn" : {
+		"Type" : "String",
+		"Default" : "arn:aws:iam::713832208941:role/lambdaS3Admin"
+	},
+	"LambdaReadOnlyRoleArn" : {
 		"Type" : "String",
 		"Default" : "arn:aws:iam::713832208941:role/lambdaS3ReadOnly"
+	},
+	"RuntimeParam" : {
+		"Type" : "String",
+		"Default" : "python3.7"
 	}
   },
   "Resources" : {
     "LambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-		"FunctionName": "functionOne",
+		"FunctionName": "f1",
         "Handler": "GetBucketsFunc.lambda_function.lambda_handler",
-        "Role": { "Ref" : "LambdaRoleArn" },
+        "Role": { "Ref" : "LambdaReadOnlyRoleArn" },
         "Code": {
 			"S3Bucket": {"Ref" : "LambdaSourceBucket" },
             "S3Key": {"Ref" : "LambdaSourceKeyFirstFunc" }
         },
-        "Runtime": "python3.7"
+        "Runtime": {"Ref" : "RuntimeParam" }
       }
     },
 	"CreateBucketFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-		"FunctionName": "createS3BucketLambda",
+		"FunctionName": "f2",
         "Handler": "GetBucketsFunc_second.lambda_function.lambda_handler",
-        "Role": { "Ref" : "LambdaRoleArn" },
+        "Role": { "Ref" : "LambdaAdminRoleArn" },
         "Code": {
 			"S3Bucket": {"Ref" : "LambdaSourceBucket" },
             "S3Key": {"Ref" : "LambdaSourceKeySecondFunc" }
         },
-        "Runtime": "python3.7"
+        "Runtime": {"Ref" : "RuntimeParam" }
       }
     }
   }
